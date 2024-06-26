@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, Response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from cctv.cctvapp import cctv_live as cctv_live_feed 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///todo.db"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 class Todo(db.Model):
@@ -13,8 +15,11 @@ class Todo(db.Model):
 
     def __repr__(self) -> str:
         return f"{self.sno} - {self.Title}"
+@app.route("/")
+def home():
+    return render_template("home.html")
 
-@app.route("/",methods=['GET','POST'])
+@app.route("/Todo",methods=['GET','POST'])
 def add():
     if request.method == 'POST':
         todo_title = request.form['title']
@@ -23,6 +28,7 @@ def add():
         db.session.add(data)
         db.session.commit()
         db.session.close()
+        return redirect("/Todo")
     alltodo = Todo.query.all()
     return render_template("index.html",alltodo = alltodo)
 
@@ -31,7 +37,7 @@ def delete(sno):
     todo = Todo.query.filter_by(sno = sno).first()
     db.session.delete(todo)
     db.session.commit()
-    return redirect("/")
+    return redirect("/Todo")
 
 @app.route("/update/<int:sno>", methods=['GET','POST'])
 def update(sno):
@@ -43,9 +49,14 @@ def update(sno):
         data.Description = todo_desc
         db.session.add(data)
         db.session.commit()
-        return redirect("/")
+        return redirect("/Todo")
     todo = Todo.query.filter_by(sno = sno).first()
     return render_template("update.html", todo = todo)
+
+
+@app.route("/video_feed")
+def video_feed():
+    return Response(cctv_live_feed(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
     with app.app_context():
