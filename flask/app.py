@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, redirect, Response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from cctv.cctvapp import cctv_live as cctv_live_feed 
+from meme.memeapp import getmeme
+
+
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///todo.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -57,6 +60,11 @@ def update(sno):
 @app.route("/video_feed")
 def video_feed():
     return Response(cctv_live_feed(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route("/meme")
+def meme():
+    meme_pic, subreddit = getmeme()
+    return render_template("meme.html",meme_pic = meme_pic, subreddit = subreddit)
 
 if __name__ == "__main__":
     with app.app_context():
