@@ -18,6 +18,7 @@ class Todo(db.Model):
 
     def __repr__(self) -> str:
         return f"{self.sno} - {self.Title}"
+    
 @app.route("/")
 def home():
     return render_template("home.html")
